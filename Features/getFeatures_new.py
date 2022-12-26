@@ -76,11 +76,12 @@ for batch_n, batch in tqdm(enumerate(train_dataloader), total=len(train_dataload
     features = model(batch["image"]).detach().numpy()
     features = features.reshape((features.shape[0], 1000))
     aux = aux + len(batchLabels)
+
+    imageNames = batch["image_id"]
     
-    for (label, vec) in zip(batchLabels, features):
+    for (imageId, label, vec) in zip(imageNames, batchLabels, features):
         vec = ",".join([str(v) for v in vec])
-        csv.write("{},{}\n".format(label, vec))
-    
+        csv.write("{},{},{}\n".format(imageId, label, vec))
 
 csv.close()
 print(aux)
