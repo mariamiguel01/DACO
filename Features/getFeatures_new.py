@@ -56,7 +56,6 @@ class ImagesDataset(Dataset):
 
 
 
-
 train_dataset = ImagesDataset(x, y)
 train_dataloader = DataLoader(train_dataset, batch_size=32)
 
