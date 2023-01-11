@@ -1,20 +1,14 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-from PIL import Image
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
-
 train_features_csv = np.loadtxt('features_file_resnet.csv', delimiter=',')
-train_labels = pd.read_csv("train_labels.csv", index_col="id")
-species_labels = sorted(train_labels.columns.unique())
 
 x = train_features_csv[:, 1:]
 y = train_features_csv[:,0]
 
 x_train, x_eval, y_train, y_eval = train_test_split(
-    x, y, stratify=y, test_size=0.25 #TESTAR o stratify
+    x, y, stratify=y, test_size=0.25
 )
 
 k_test = [12,15,18,25,30]
