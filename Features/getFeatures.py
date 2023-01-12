@@ -2,13 +2,12 @@ from sklearn.preprocessing import LabelEncoder
 from keras.applications.vgg16 import preprocess_input
 from keras.utils import img_to_array
 from keras.utils import load_img
-from imutils import paths
 import numpy as np
 import pickle
 import random
 from imutils import paths
-from keras.applications import VGG16
-from keras.applications import ResNet101, ResNet50
+from keras.applications import VGG16, ResNet50, DenseNet121
+import keras as K
 import os
 import numpy as np
 
@@ -28,23 +27,37 @@ CLASSES = ['antelope_duiker',
  'rodent']
 
 
-model = VGG16(weights="imagenet", include_top=True, input_shape=(224,224,3))
+res_model = DenseNet121(weights="imagenet", include_top=False, input_shape=(224,224,3))
+
+
+for layer in res_model.layers[:149]:
+    layer.trainable = False
+
+
+model = K.models.Sequential()
+model.add(res_model)
+model.add(K.layers.MaxPooling2D(pool_size=(7, 7),strides=(2, 2), padding='valid'))
+model.add(K.layers.Flatten())
+model.summary()
 le = None
 
 imagePaths = list(paths.list_images("images/train"))
 random.shuffle(imagePaths)
 labels = [p.split(os.path.sep)[-2] for p in imagePaths]
+namesFile = [p.split(os.path.sep)[-1] for p in imagePaths]
+names = [p.split(".")[0] for p in namesFile]
 
 if le is None:
 	le = LabelEncoder()
 	le.fit(labels)
 
-csvPath = "features/features_file_VGG16.csv"
+csvPath = "features/features_DenseNet121.csv"
 csv = open(csvPath, "w")
 
 for (b,i) in enumerate(range(0,len(imagePaths), BATCH_SIZE)):
     batchPaths = imagePaths[i:i + BATCH_SIZE]
     batchLabels = le.transform(labels[i:i + BATCH_SIZE])
+    batchNames = names[i:i + BATCH_SIZE]
     batchImages = []
     
     for imagePath in batchPaths:
@@ -56,10 +69,10 @@ for (b,i) in enumerate(range(0,len(imagePaths), BATCH_SIZE)):
     
     batchImages = np.vstack(batchImages)
     features = model.predict(batchImages, batch_size=BATCH_SIZE)
-    features = features.reshape((features.shape[0], 1000))
-    for (label, vec) in zip(batchLabels, features):
+    features = features.reshape((features.shape[0], 1024))
+    for (imageId, label, vec) in zip(batchNames, batchLabels, features):
         vec = ",".join([str(v) for v in vec])
-        csv.write("{},{}\n".format(label, vec))
+        csv.write("{},{},{}\n".format(imageId, label, vec))
 
 csv.close()
 f = open(LE_PATH, "wb")
