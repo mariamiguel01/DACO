@@ -1,15 +1,17 @@
 import numpy as np
 from tqdm import tqdm
-from sklearn.model_selection import train_test_split
+import pandas as pd
 
-train_features_csv = np.loadtxt('features_file_resnet.csv', delimiter=',')
+train_samples_csv = pd.read_csv('features_ResNet50_train.csv', delimiter=',')
+test_samples_csv = pd.read_csv('features_ResNet50_test.csv', delimiter=',')
 
-x = train_features_csv[:, 1:]
-y = train_features_csv[:,0]
+train_samples = np.array(train_samples_csv)
+test_samples = np.array(test_samples_csv)
 
-x_train, x_eval, y_train, y_eval = train_test_split(
-    x, y, stratify=y, test_size=0.25
-)
+x_train = train_samples[:, 2:]
+y_train = train_samples[:,1]
+x_test = test_samples[:, 2:]
+y_test = test_samples[:,1]
 
 k_test = [12,15,18,25,30]
 
@@ -19,11 +21,11 @@ for K in k_test:
     all_distances = []
     all_prob = []
     predictions = []
-    for sample in tqdm(x_eval):
+    for sample in tqdm(x_test):
         distance = []
         for x in x_train:
             distance.append(sum((sample - x)**2))
-        sorted_distances_index = np.argsort(distance)[::-1][:K]
+        sorted_distances_index = np.argsort(distance)[:K]
         all_distances.append(sorted_distances_index)
 
         sample_prob = []
@@ -39,5 +41,5 @@ for K in k_test:
     #Step-6: Our model is ready.
 
     # Evaluate the accuracy of the classifier
-    accuracy = np.mean(predictions == y_eval)*100
+    accuracy = np.mean(predictions == y_test)*100
     print(K, f' Accuracy: {accuracy:.2f}')

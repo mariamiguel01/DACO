@@ -1,98 +1,77 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-from PIL import Image
-from tqdm import tqdm
-
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-from PIL import Image
-from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedShuffleSplit
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten, Conv1D, Dropout
+from keras.optimizers import SGD
+from keras.utils import np_utils
 
-import tensorflow as tf
-from keras import datasets, layers, models
-
-#from imutils import paths
-from sklearn.model_selection import train_test_split
-import os
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
-from torchvision import transforms
-import torch
-import shutil
-#import torchvision.models as models
-
-train_features = pd.read_csv("train_features.csv", index_col="id")
+train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',', usecols=[2:])
+test_samples_csv = pd.read_csv('Features/features_VGG16_test.csv', delimiter=',')
 train_labels = pd.read_csv("train_labels.csv", index_col="id")
+#species_labels = sorted(train_labels.columns.unique())
 
-frac = 1000/len(train_features)
-y = train_labels.sample(frac=frac, random_state=1)
-x = train_features.loc[y.index].filepath.to_frame()
+x = train_samples_csv[:, 2:]
+y = train_samples_csv[:,1]
+x_test = test_samples_csv[:, 2:]
+y_test = test_samples_csv[:,1]
 
-# note that we are casting the species labels to an indicator/dummy matrix
-x_train, x_eval, y_train, y_eval = train_test_split(
-    x, y, stratify=y, test_size=0.10
-)
+# standardize train features
+scaler = StandardScaler().fit(x)
+scaled_train = scaler.transform(x)
+# split train data into train and validation
+sss = StratifiedShuffleSplit(test_size=0.1, random_state=23)
+for train_index, valid_index in sss.split(scaled_train, y):
+    X_train, X_valid = scaled_train[train_index], scaled_train[valid_index]
+    y_train, y_valid = y[train_index], y[valid_index]
 
-class ImagesDataset(Dataset):
-    def __init__(self, x_df, y_df=None):
-        self.data = x_df
-        self.label = y_df
-        self.transform = transforms.Compose(
-            [
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
-                ),
-            ]
-        )
+nb_features = len(train_samples_csv.columns) - 2 # number of features
+nb_class = len(species_labels)
 
-    def __getitem__(self, index):
-        image = Image.open(self.data.iloc[index]["filepath"]).convert("RGB")
-        image = self.transform(image)
-        image_id = self.data.index[index]
-        # if we don't have labels (e.g. for test set) just return the image and image id
-        if self.label is None:
-            sample = {"image_id": image_id, "image": image}
-        else:
-            label = torch.tensor(self.label.iloc[index].values, 
-                                 dtype=torch.float)
-            sample = {"image_id": image_id, "image": image, "label": label}
-        return sample
+# standardize test features
+scaler_test = StandardScaler().fit(x_test)
+scaled_test = scaler_test.transform(x_test)
 
-    def __len__(self):
-        return len(self.data)
+# Keras model with one Convolution1D layer
+# unfortunately more number of covnolutional layers, filters and filters lenght 
+# don't give better accuracy
+model = Sequential()
+model.add(Conv1D(filters=512, kernel_size=1, input_shape=(nb_features,1)))
+model.add(Activation('relu'))
+model.add(Flatten())
+model.add(Dropout(0.4))
+model.add(Dense(2048, activation='relu'))
+model.add(Dense(1024, activation='relu'))
+model.add(Dense(nb_class))
+model.add(Activation('softmax'))
 
+y_train = np_utils.to_categorical(y_train, nb_class)
+y_valid = np_utils.to_categorical(y_valid, nb_class)
+y_test = np_utils.to_categorical(y_test, nb_class)
 
-train_dataset = ImagesDataset(x_train, y_train)
-#train_dataloader = DataLoader(train_dataset, batch_size=32)
- 
+sgd = SGD(lr=0.01, nesterov=True, decay=1e-6, momentum=0.9)
+model.compile(loss='categorical_crossentropy',optimizer=sgd,metrics=['accuracy'])
 
-model = models.Sequential()
-model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-model.add(layers.MaxPooling2D((2, 2)))
+print("Fit model on training data")
+nb_epoch = 3
+model.fit(X_train, y_train, epochs=nb_epoch, validation_data=(X_valid, y_valid), batch_size=16)
 
-model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(10, activation='softmax'))
+model.save('my_model_CNN.h5')
 
-#show the CNN structure
-model.summary()
+# Evaluate the model on the test data using `evaluate`
+print("Evaluate on test data")
+results = model.evaluate(scaled_test, y_test)
+print("test loss, test acc:", results)
 
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+# Generate predictions (probabilities -- the output of the last layer)
+# on new data using `predict`
+print("Generate predictions for 3 samples")
+predictions = model.predict(scaled_test)
 
-history = model.fit(x_train, y_train, epochs=10, validation_data=(x_eval, y_eval))
-
-plt.plot(history.history['accuracy'], label='accuracy')
-plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.ylim([0.5, 1])
-plt.legend(loc='lower right')
-
-test_loss, test_acc = model.evaluate(x_eval,  y_eval)
+f = open("CNN_results.txt", "a")
+f.write("Results")
+f.write(results)
+f.write("Predictions")
+f.write(predictions)
+f.close()
