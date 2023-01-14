@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sklearn import metrics
 import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
 
 ##IMPORTING THE TRAIN DATASET
 data = pd.read_csv('features/features_VGG16_train.csv')
@@ -48,14 +50,15 @@ param_grid = dict(C=C_range)
 grid = GridSearchCV(clf, param_grid, cv=10, scoring='accuracy')
 # fit the GridSearchCV object to the data
 grid.fit(x_train, y_train)
-grid1=grid.score(x_validate,y_validate)
-scores = grid.cv_results_['mean_test_score']
-# find the index of the highest mean test score
-best_index = np.argmax(scores)
+predictions = {C: grid.predict(x_validate) for C in C_range}
+# evaluate the accuracy for each value of C on the validation set
+accuracies = {C: accuracy_score(y_validate, predictions[C]) for C in C_range}
+# find the C value that gives the highest accuracy on the validation set
+best_C = max(accuracies, key=accuracies.get)
 # print the best C value and its accuracy on validation set
-print("Best C value: ", grid.best_params_['C'])
-print("Best accuracy on validation set: ", scores[best_index])
-
+print("best c:",grid.best_params_["C"])
+print("Best C value validation: ", best_C)
+print("Best accuracy on validation set: ", accuracies[best_C])
 ###IMPORTIG THE DATASET OF TEST
 test = pd.read_csv('features/features_VGG16_test.csv')
 test = np.array(test)
@@ -74,7 +77,7 @@ y_test=y_test.astype(int)
 
 ##TRAINING THE MODEL AND TESTIG IT
 # create SVM classifier
-clf = svm.SVC(kernel='sigmoid', C=scores[best_index])
+clf = svm.SVC(kernel='sigmoid', C=accuracies[best_C])
 # wrap classifier in OneVsRestClassifier
 clf = OneVsRestClassifier(clf)
 

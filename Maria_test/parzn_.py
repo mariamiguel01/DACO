@@ -34,7 +34,11 @@ s = StandardScaler()
 x = data[2:n].T
 x = s.fit_transform(x)
 y = data[1]
-
+x_train, x_validate, y_train, y_validate = train_test_split(
+    x, y, stratify=y, test_size=0.01
+)
+x_train=x_train[1:3000]
+y_train=y_train[1:3000]
 test = pd.read_csv('features/features_VGG16_test.csv')
 test = np.array(test)
 m, n = test.shape
@@ -47,13 +51,11 @@ x_test = s.fit_transform(x)
 y_test = test[1] 
 x_test=np.array(x_test)
 y_test=np.array(y_test)
-y_test = y_test[0:500]
+y_test = y_test[0:300]
 y_test=y_test.astype(int)
 
 
-x_train, x_validate, y_train, y_validate = train_test_split(
-    x, y, stratify=y, test_size=0.01
-)
+
 
 
 predictions = []
@@ -61,7 +63,7 @@ p_array=[]
 pdfs=[]
 
 #for i in tqdm(range(x_validate.shape[0])):
-for i in tqdm(range(x_test.shape(0)))
+for i in tqdm(range(x_test.shape[0])):
   pdfs = []
   for c in range(7):
       X_c = x_train[y_train==c]
