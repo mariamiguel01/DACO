@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -7,15 +6,15 @@ from keras.layers import Dense, Activation, Flatten, Conv1D, Dropout
 from keras.optimizers import SGD
 from keras.utils import np_utils
 
-train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',', usecols=[2:])
+train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',')
 test_samples_csv = pd.read_csv('Features/features_VGG16_test.csv', delimiter=',')
 train_labels = pd.read_csv("train_labels.csv", index_col="id")
-#species_labels = sorted(train_labels.columns.unique())
+#species_labels = sorted(np.array(train_labels.columns).unique())
 
-x = train_samples_csv[:, 2:]
-y = train_samples_csv[:,1]
-x_test = test_samples_csv[:, 2:]
-y_test = test_samples_csv[:,1]
+x = train_samples_csv.iloc[:, 2:]
+y = train_samples_csv.iloc[:,1]
+x_test = test_samples_csv.iloc[:, 2:]
+y_test = test_samples_csv.iloc[:,1]
 
 # standardize train features
 scaler = StandardScaler().fit(x)
@@ -27,7 +26,7 @@ for train_index, valid_index in sss.split(scaled_train, y):
     y_train, y_valid = y[train_index], y[valid_index]
 
 nb_features = len(train_samples_csv.columns) - 2 # number of features
-nb_class = len(species_labels)
+nb_class = 8
 
 # standardize test features
 scaler_test = StandardScaler().fit(x_test)
@@ -70,8 +69,8 @@ print("Generate predictions for 3 samples")
 predictions = model.predict(scaled_test)
 
 f = open("CNN_results.txt", "a")
-f.write("Results")
-f.write(results)
+#f.write("Results")
+#f.write(results)
 f.write("Predictions")
 f.write(predictions)
 f.close()
