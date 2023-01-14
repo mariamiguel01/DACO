@@ -5,13 +5,13 @@ from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 
 
-def evaluate_gaussian_all(X_c, x, var=1):
+def evaluate_gaussian_all(X_c, x):
   gaussian_list = []
   totalvalue=0
   n = len(x)
   for i in range(X_c.shape[0]):
       mu = X_c[i]
-      sigma = np.identity(n)
+      sigma = np.identity(n)*0.825
       prob = np.exp(-0.5*(x-mu).T @ np.linalg.inv(sigma) @ (x-mu))
       totalvalue += prob
   return totalvalue
@@ -21,7 +21,7 @@ train_labels = pd.read_csv("train_labels.csv", index_col="id")
 species_labels = sorted(train_labels.columns.unique())
 class_num=np.size(species_labels)
 
-data = pd.read_csv('features/features_file_resnet2.csv')
+data = pd.read_csv('features/features_VGG16_train.csv')
 
 data = np.array(data)
 m, n = data.shape
