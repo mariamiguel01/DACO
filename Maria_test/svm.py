@@ -64,6 +64,9 @@ x_test = s.fit_transform(x)
 y_test = test[1] 
 x_test=np.array(x_test)
 y_test=np.array(y_test)
+y_test = y_test[0:500]
+y_test=y_test.astype(int)
+
 ##TRAINING THE MODEL AND TESTIG IT
 # create SVM classifier
 clf = svm.SVC(kernel='linear', C=grid.best_params_["C"])
