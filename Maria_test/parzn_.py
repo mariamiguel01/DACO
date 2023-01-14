@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
+from sklearn import metrics
+import matplotlib.pyplot as plt
 
 
 def evaluate_gaussian_all(X_c, x):
@@ -72,5 +74,12 @@ for i in tqdm(range(x_test.shape(0)))
 
 print(predictions)
 # Evaluate the accuracy of the classifier
-accuracy = np.mean(predictions == y_validate)
+#accuracy = np.mean(predictions == y_validate)
+accuracy = np.mean(predictions == y_test)
 print(f'Accuracy: {accuracy:.2f}')
+
+confMatrix = metrics.confusion_matrix(y_test, predictions, normalize = None)
+display = metrics.ConfusionMatrixDisplay(confusion_matrix = confMatrix)
+display.plot()
+plt.show()
+plt.title('Confusion Matrix - LogisticRegression')

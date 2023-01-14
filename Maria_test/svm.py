@@ -39,17 +39,22 @@ print(y_validate)
 
 ###FINDING THE BEST C VALUE FOR THE TRAIN DATA
 # create an SVM classifier
-clf = svm.SVC(kernel='linear')
+clf = svm.SVC(kernel='sigmoid')
 # define the range of C values to test
-C_range = [0.1, 1, 10, 100, 1000]
+C_range = [0.2,0.4,0.6,0.8,1, 2,5, 10, 100, 1000]
 # create a dictionary of parameters to test
 param_grid = dict(C=C_range)
 # create a GridSearchCV object
-grid = GridSearchCV(clf, param_grid, cv=5, scoring='accuracy')
+grid = GridSearchCV(clf, param_grid, cv=10, scoring='accuracy')
 # fit the GridSearchCV object to the data
 grid.fit(x_train, y_train)
-# print the best value for C
-print("Best C value: ", grid.best_params_["C"])
+grid1=grid.score(x_validate,y_validate)
+scores = grid.cv_results_['mean_test_score']
+# find the index of the highest mean test score
+best_index = np.argmax(scores)
+# print the best C value and its accuracy on validation set
+print("Best C value: ", grid.best_params_['C'])
+print("Best accuracy on validation set: ", scores[best_index])
 
 ###IMPORTIG THE DATASET OF TEST
 test = pd.read_csv('features/features_VGG16_test.csv')
@@ -69,7 +74,7 @@ y_test=y_test.astype(int)
 
 ##TRAINING THE MODEL AND TESTIG IT
 # create SVM classifier
-clf = svm.SVC(kernel='linear', C=grid.best_params_["C"])
+clf = svm.SVC(kernel='sigmoid', C=scores[best_index])
 # wrap classifier in OneVsRestClassifier
 clf = OneVsRestClassifier(clf)
 
