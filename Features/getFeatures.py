@@ -1,3 +1,14 @@
+'''
+Get Features
+
+This file was developed as a project for DACO subject from Bioengeneering Masters at FEUP
+
+It runs a feature extraction model in a set of images.
+
+The features are saved in .csv files
+'''
+
+
 from sklearn.preprocessing import LabelEncoder
 from keras.applications.vgg16 import preprocess_input
 from keras.utils import img_to_array
@@ -26,14 +37,14 @@ CLASSES = ['antelope_duiker',
  'monkey_prosimian',
  'rodent']
 
+# This is model used. To extract features from each three, change from ResNet50 to VVG16 and DenseNet121
+res_model = ResNet50(weights="imagenet", include_top=False, input_shape=(224,224,3))
 
-res_model = DenseNet121(weights="imagenet", include_top=False, input_shape=(224,224,3))
-
-
-for layer in res_model.layers[:149]:
+# When using Resnet50 or DenseNet121, use this cicle to stop the process. The value should be 143 for ResNet50 and 149 for DenseNet121
+for layer in res_model.layers[:143]:
     layer.trainable = False
 
-
+# This adds the MaxPooling operation and a Flatten opertion to the model
 model = K.models.Sequential()
 model.add(res_model)
 model.add(K.layers.MaxPooling2D(pool_size=(7, 7),strides=(2, 2), padding='valid'))
@@ -41,6 +52,7 @@ model.add(K.layers.Flatten())
 model.summary()
 le = None
 
+# The model is then applied to each image in the dataset using batches of 32
 imagePaths = list(paths.list_images("images/train"))
 random.shuffle(imagePaths)
 labels = [p.split(os.path.sep)[-2] for p in imagePaths]
@@ -69,7 +81,7 @@ for (b,i) in enumerate(range(0,len(imagePaths), BATCH_SIZE)):
     
     batchImages = np.vstack(batchImages)
     features = model.predict(batchImages, batch_size=BATCH_SIZE)
-    features = features.reshape((features.shape[0], 1024))
+    features = features.reshape((features.shape[0], 2048)) #The second value should be 2048 for ResNet50, 1024 for DenseNet121 and 512 for VGG16
     for (imageId, label, vec) in zip(batchNames, batchLabels, features):
         vec = ",".join([str(v) for v in vec])
         csv.write("{},{},{}\n".format(imageId, label, vec))
