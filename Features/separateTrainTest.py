@@ -1,7 +1,17 @@
+'''
+Separate Train and Test
+
+This file was developed as a project for DACO subject from Bioengeneering Masters at FEUP
+
+It reads each .csv file created using getFeatures.py and devides each one into two: one for Training and one for Testing
+'''
+
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 
+
+# Reads the VGG16 features file and devides it into training and test
 data_vgg16 = pd.read_csv("features/features_VGG16.csv")
 data_vgg16 = np.array(data_vgg16)
 m,n = data_vgg16.shape
@@ -16,7 +26,7 @@ xVG_train, xVG_test, yVG_train, yVG_test, namesVG_train, namesVG_test = train_te
     x_vgg16, y_vgg16, names, stratify=y_vgg16, test_size=0.05
 )
 
-
+# Saves the data into new .csv file
 csvPathVG_train = "features/features_VGG16_train.csv"
 csv1 = open(csvPathVG_train, "w")
 
@@ -35,6 +45,8 @@ for (imageId, label, vec) in zip(namesVG_test, yVG_test, xVG_test):
 
 csv2.close()
 
+
+# Reads the ResNet50 features file
 data_resnet = pd.read_csv("features/features_ResNet50.csv")
 m1,n1 = data_resnet.shape
 data_resnet = np.array(data_resnet).T
@@ -42,14 +54,12 @@ namesRes = data_resnet[0]
 labelsRes = data_resnet[1]
 valuesRes = data_resnet[2:n1].T
 
+# Finds the names of the images present in test and training set defined for VGG16 and uses them to devide the ResNet features into train and test
 interNamesRes_train = np.in1d(namesRes, namesVG_train)
 interNamesRes_test = np.in1d(namesRes, namesVG_test)
-
 data_resnet = data_resnet.T
 dataRes_train = data_resnet[interNamesRes_train].T
 dataRes_test = data_resnet[interNamesRes_test].T
-
-
 xRes_train = dataRes_train[2:n1].T
 xRes_test = dataRes_test[2:n1].T
 yRes_train = dataRes_train[1]
@@ -57,7 +67,7 @@ yRes_test = dataRes_test[1]
 namesRes_train = dataRes_train[0]
 namesRes_test = dataRes_test[0]
 
-
+# Saves the data into new .csv file
 csvPathRes_test = "features/features_ResNet50_test.csv"
 csv3 = open(csvPathRes_test, "w")
 
@@ -77,22 +87,18 @@ for (imageId, label, vec) in zip(namesRes_train, yRes_train, xRes_train):
 csv4.close()
 
 
-#-------
-
+# Reads the DenseNet121 features file
 data_dense = pd.read_csv("features/features_DenseNet121.csv")
 m2,n2 = data_dense.shape
 data_dense = np.array(data_dense).T
 namesDense = data_dense[0]
 
-
+# Finds the names of the images present in test and training set defined for VGG16 and uses them to devide the DenseNEt features into train and test
 interNamesDense_train = np.in1d(namesDense, namesVG_train)
 interNamesDense_test = np.in1d(namesDense, namesVG_test)
-
 data_dense = data_dense.T
 dataDense_train = data_dense[interNamesDense_train].T
 dataDense_test = data_dense[interNamesDense_test].T
-
-
 xDense_train = dataDense_train[2:n2].T
 xDense_test = dataDense_test[2:n2].T
 yDense_train = dataDense_train[1]
@@ -100,7 +106,7 @@ yDense_test = dataDense_test[1]
 namesDense_train = dataDense_train[0]
 namesDense_test = dataDense_test[0]
 
-
+# Saves the data into new .csv file
 csvPathDense_test = "features/features_DenseNet121_test.csv"
 csv5 = open(csvPathDense_test, "w")
 

@@ -5,11 +5,13 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Conv1D, Dropout
 from keras.optimizers import SGD
 from keras.utils import np_utils
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import metrics
 
 train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',')
 test_samples_csv = pd.read_csv('Features/features_VGG16_test.csv', delimiter=',')
 train_labels = pd.read_csv("train_labels.csv", index_col="id")
-#species_labels = sorted(np.array(train_labels.columns).unique())
 
 x = train_samples_csv.iloc[:, 2:]
 y = train_samples_csv.iloc[:,1]
@@ -28,20 +30,14 @@ for train_index, valid_index in sss.split(scaled_train, y):
 nb_features = len(train_samples_csv.columns) - 2 # number of features
 nb_class = 8
 
-# standardize test features
-scaler_test = StandardScaler().fit(x_test)
-scaled_test = scaler_test.transform(x_test)
-
 # Keras model with one Convolution1D layer
-# unfortunately more number of covnolutional layers, filters and filters lenght 
-# don't give better accuracy
 model = Sequential()
-model.add(Conv1D(filters=512, kernel_size=1, input_shape=(nb_features,1)))
+model.add(Conv1D(filters=512, kernel_size=3, input_shape=(nb_features,1)))
 model.add(Activation('relu'))
 model.add(Flatten())
 model.add(Dropout(0.4))
-model.add(Dense(2048, activation='relu'))
 model.add(Dense(1024, activation='relu'))
+model.add(Dense(100, activation='relu'))
 model.add(Dense(nb_class))
 model.add(Activation('softmax'))
 
@@ -56,21 +52,19 @@ print("Fit model on training data")
 nb_epoch = 3
 model.fit(X_train, y_train, epochs=nb_epoch, validation_data=(X_valid, y_valid), batch_size=16)
 
-model.save('my_model_CNN.h5')
-
-# Evaluate the model on the test data using `evaluate`
+# Evaluate the model on the test data
 print("Evaluate on test data")
-results = model.evaluate(scaled_test, y_test)
+results = model.evaluate(x_test, y_test)
 print("test loss, test acc:", results)
 
-# Generate predictions (probabilities -- the output of the last layer)
-# on new data using `predict`
-print("Generate predictions for 3 samples")
-predictions = model.predict(scaled_test)
+# Generate predictions (probabilities -- the output of the last layer) on new data
+predictions = model.predict(x_test)
 
-f = open("CNN_results.txt", "a")
-#f.write("Results")
-#f.write(results)
-f.write("Predictions")
-f.write(predictions)
-f.close()
+Ytrue_test = np.argmax(np.array(y_test.astype(int)), axis=1)
+Ypred = np.argmax(np.array(predictions).astype(int), axis=1)
+
+confMatrix = metrics.confusion_matrix(Ytrue_test, Ypred, normalize = None)
+display = metrics.ConfusionMatrixDisplay(confusion_matrix = confMatrix)
+display.plot()
+plt.show()
+plt.title('Confusion Matrix - Neural Network')
