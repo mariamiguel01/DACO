@@ -12,7 +12,6 @@ from sklearn import metrics
 train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',')
 test_samples_csv = pd.read_csv('Features/features_VGG16_test.csv', delimiter=',')
 train_labels = pd.read_csv("train_labels.csv", index_col="id")
-#species_labels = sorted(np.array(train_labels.columns).unique())
 
 x = train_samples_csv.iloc[:, 2:]
 y = train_samples_csv.iloc[:,1]
