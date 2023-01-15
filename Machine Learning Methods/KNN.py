@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 
 # import feature files
-train_samples_csv = pd.read_csv('Features/features_ResNet50_train.csv', delimiter=',')
-test_samples_csv = pd.read_csv('Features/features_ResNet50_test.csv', delimiter=',')
+train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',')
+test_samples_csv = pd.read_csv('Features/features_VGG16_test.csv', delimiter=',')
 
 train_samples = np.array(train_samples_csv)
 x_train_ = train_samples[:, 2:]
