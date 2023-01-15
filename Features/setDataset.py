@@ -1,10 +1,14 @@
-from imutils import paths
-from keras.applications import ResNet50
+'''
+Set Dataset
+
+This file was developed as a project for DACO subject from Bioengeneering Masters at FEUP
+
+It separates the images from a folder into a respective one according to its class
+It helps to better analyse and organize the project
+'''
+
 import os
-import matplotlib.pyplot as plt
 import pandas as pd
-from PIL import Image
-from tqdm import tqdm
 from torch.utils.data import DataLoader
 import torch
 from torch.utils.data import Dataset
@@ -36,8 +40,8 @@ frac = 1
 y = train_labels.sample(frac=frac, random_state=1)
 x = train_features.loc[y.index].filepath.to_frame()
 
-# note that we are casting the species labels to an indicator/dummy matrix
-
+# This class was given in the benchmark.ipynb provided by the competition. It pre-processes the images and gets data from it
+# This will be applyed to organize the images into folders
 class ImagesDataset(Dataset):
     """Reads in an image, transforms pixel values, and serves
     a dictionary containing the image id, image tensors, and label.
@@ -59,7 +63,6 @@ class ImagesDataset(Dataset):
     def __getitem__(self, index):
         image = self.data.iloc[index]["filepath"]
         image_id = self.data.index[index]
-        # if we don't have labels (e.g. for test set) just return the image and image id
         if self.label is None:
             sample = {"image_id": image_id, "image": image}
         else:
@@ -74,8 +77,7 @@ class ImagesDataset(Dataset):
 train_dataset = ImagesDataset(x, y)
 train_dataloader = DataLoader(train_dataset, batch_size=32)
 
-
-
+# Using the information obtained with the provided class (above) we save the images into different class folders
 for i in range(len(train_dataset)):
     filename = train_dataset[i]['image_id']
     label = CLASSES[np.where(train_dataset[i]['label'].numpy() == 1.)[0][0]]
