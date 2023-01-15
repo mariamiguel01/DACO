@@ -41,7 +41,7 @@ scaled_test = scaler_test.transform(x_test)
 model = Sequential()
 model.add(Conv1D(filters=512, kernel_size=3, input_shape=(nb_features,1)))
 model.add(Activation('relu'))
-#model.add(Flatten())
+model.add(Flatten())
 model.add(Dropout(0.4))
 model.add(Dense(1024, activation='relu'))
 model.add(Dense(100, activation='relu'))
@@ -59,7 +59,7 @@ print("Fit model on training data")
 nb_epoch = 3
 model.fit(X_train, y_train, epochs=nb_epoch, validation_data=(X_valid, y_valid), batch_size=16)
 
-model.save('my_model_CNN.h5')
+model.save('new_model_CNN.h5')
 
 # Evaluate the model on the test data using `evaluate`
 print("Evaluate on test data")
@@ -67,13 +67,12 @@ results = model.evaluate(scaled_test, y_test)
 print("test loss, test acc:", results)
 
 # Generate predictions (probabilities -- the output of the last layer) on new data using `predict`
-print("Generate predictions for 3 samples")
 predictions = model.predict(scaled_test)
 
 Ypred = np.array(predictions).astype(int)
 Yvalid = y_test.astype(int)
 
-confMatrix = metrics.confusion_matrix(y_test, predictions, normalize = None)
+confMatrix = metrics.confusion_matrix(Yvalid, Ypred, normalize = None)
 display = metrics.ConfusionMatrixDisplay(confusion_matrix = confMatrix)
 display.plot()
 plt.show()
