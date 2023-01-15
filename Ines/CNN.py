@@ -6,6 +6,9 @@ from keras.layers import Dense, Activation, Flatten, Conv1D, Dropout
 from keras.optimizers import SGD
 from keras.utils import np_utils
 
+import matplotlib.pyplot as plt
+from sklearn import metrics
+
 train_samples_csv = pd.read_csv('Features/features_VGG16_train.csv', delimiter=',')
 test_samples_csv = pd.read_csv('Features/features_VGG16_test.csv', delimiter=',')
 train_labels = pd.read_csv("train_labels.csv", index_col="id")
@@ -36,12 +39,12 @@ scaled_test = scaler_test.transform(x_test)
 # unfortunately more number of covnolutional layers, filters and filters lenght 
 # don't give better accuracy
 model = Sequential()
-model.add(Conv1D(filters=512, kernel_size=1, input_shape=(nb_features,1)))
+model.add(Conv1D(filters=512, kernel_size=3, input_shape=(nb_features,1)))
 model.add(Activation('relu'))
-model.add(Flatten())
+#model.add(Flatten())
 model.add(Dropout(0.4))
-model.add(Dense(2048, activation='relu'))
 model.add(Dense(1024, activation='relu'))
+model.add(Dense(100, activation='relu'))
 model.add(Dense(nb_class))
 model.add(Activation('softmax'))
 
@@ -63,14 +66,12 @@ print("Evaluate on test data")
 results = model.evaluate(scaled_test, y_test)
 print("test loss, test acc:", results)
 
-# Generate predictions (probabilities -- the output of the last layer)
-# on new data using `predict`
+# Generate predictions (probabilities -- the output of the last layer) on new data using `predict`
 print("Generate predictions for 3 samples")
 predictions = model.predict(scaled_test)
 
-f = open("CNN_results.txt", "a")
-#f.write("Results")
-#f.write(results)
-f.write("Predictions")
-f.write(predictions)
-f.close()
+confMatrix = metrics.confusion_matrix(y_test, predictions, normalize = None)
+display = metrics.ConfusionMatrixDisplay(confusion_matrix = confMatrix)
+display.plot()
+plt.show()
+plt.title('Confusion Matrix - LogisticRegression')
