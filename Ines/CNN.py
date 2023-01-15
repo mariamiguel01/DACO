@@ -5,7 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Conv1D, Dropout
 from keras.optimizers import SGD
 from keras.utils import np_utils
-
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
 
@@ -70,8 +70,11 @@ print("test loss, test acc:", results)
 print("Generate predictions for 3 samples")
 predictions = model.predict(scaled_test)
 
+Ypred = np.array(predictions).astype(int)
+Yvalid = y_test.astype(int)
+
 confMatrix = metrics.confusion_matrix(y_test, predictions, normalize = None)
 display = metrics.ConfusionMatrixDisplay(confusion_matrix = confMatrix)
 display.plot()
 plt.show()
-plt.title('Confusion Matrix - LogisticRegression')
+plt.title('Confusion Matrix - Neural Network')
