@@ -31,13 +31,7 @@ for train_index, valid_index in sss.split(scaled_train, y):
 nb_features = len(train_samples_csv.columns) - 2 # number of features
 nb_class = 8
 
-# standardize test features
-scaler_test = StandardScaler().fit(x_test)
-scaled_test = scaler_test.transform(x_test)
-
 # Keras model with one Convolution1D layer
-# unfortunately more number of covnolutional layers, filters and filters lenght 
-# don't give better accuracy
 model = Sequential()
 model.add(Conv1D(filters=512, kernel_size=3, input_shape=(nb_features,1)))
 model.add(Activation('relu'))
@@ -59,20 +53,18 @@ print("Fit model on training data")
 nb_epoch = 3
 model.fit(X_train, y_train, epochs=nb_epoch, validation_data=(X_valid, y_valid), batch_size=16)
 
-model.save('new_model_CNN.h5')
-
-# Evaluate the model on the test data using `evaluate`
+# Evaluate the model on the test data
 print("Evaluate on test data")
-results = model.evaluate(scaled_test, y_test)
+results = model.evaluate(x_test, y_test)
 print("test loss, test acc:", results)
 
-# Generate predictions (probabilities -- the output of the last layer) on new data using `predict`
-predictions = model.predict(scaled_test)
+# Generate predictions (probabilities -- the output of the last layer) on new data
+predictions = model.predict(x_test)
 
-Ypred = np.array(predictions).astype(int)
-Yvalid = y_test.astype(int)
+Ytrue_test = np.argmax(np.array(y_test.astype(int)), axis=1)
+Ypred = np.argmax(np.array(predictions).astype(int), axis=1)
 
-confMatrix = metrics.confusion_matrix(Yvalid, Ypred, normalize = None)
+confMatrix = metrics.confusion_matrix(Ytrue_test, Ypred, normalize = None)
 display = metrics.ConfusionMatrixDisplay(confusion_matrix = confMatrix)
 display.plot()
 plt.show()
