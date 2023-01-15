@@ -21,12 +21,7 @@ def evaluate_gaussian_all(X_c, x):
   return totalvalue
 
 ###import the data from the train set and subdivide it into train and validation; randomize the data 
-train_labels = pd.read_csv("train_labels.csv", index_col="id")
-species_labels = sorted(train_labels.columns.unique())
-class_num=np.size(species_labels)
-
 data = pd.read_csv('features/features_VGG16_train.csv')
-
 data = np.array(data)
 m, n = data.shape
 np.random.shuffle(data)
